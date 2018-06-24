@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Form, Input, Tooltip, Icon, Cascader, Select, Row, Col, Checkbox, Button, AutoComplete } from 'antd';
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -110,8 +109,18 @@ class RegistrationForm extends React.Component {
         ));
 
         return (
-            <Form onSubmit={this.handleSubmit}>
 
+            <Form onSubmit={this.handleSubmit}>
+                <FormItem
+                    {...formItemLayout}
+                    label={"Username"}
+                >
+                    {getFieldDecorator('username', {
+                        rules: [{ required: true, message: 'Please input your username!', whitespace: true }],
+                    })(
+                        <Input />
+                    )}
+                </FormItem>
                 <FormItem
                     {...formItemLayout}
                     label="Password"
@@ -140,23 +149,7 @@ class RegistrationForm extends React.Component {
                         <Input type="password" onBlur={this.handleConfirmBlur} />
                     )}
                 </FormItem>
-                <FormItem
-                    {...formItemLayout}
-                    label={(
-                        <span>
-              Nickname&nbsp;
-                            <Tooltip title="What do you want others to call you?">
-                <Icon type="question-circle-o" />
-              </Tooltip>
-            </span>
-                    )}
-                >
-                    {getFieldDecorator('nickname', {
-                        rules: [{ required: true, message: 'Please input your nickname!', whitespace: true }],
-                    })(
-                        <Input />
-                    )}
-                </FormItem>
+
                 <FormItem {...tailFormItemLayout}>
                     <Button type="primary" htmlType="submit">Register</Button>
                 </FormItem>
