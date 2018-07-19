@@ -4,6 +4,7 @@ import {API_ROOT, GEO_OPTIONS, POS_KEY,AUTH_PREFIX,TOKEN_KEY} from '../constants
 import $ from 'jquery';
 import {Gallery} from './Gallery'
 import { CreatePostButton} from './CreatePostButton'
+import { WrappedAroundMap } from './AroundMap'
 
 const TabPane = Tabs.TabPane;
 
@@ -41,31 +42,31 @@ export class Home extends React.Component{
         console.log(position);
         this.setState( {loadingGeoLocation: false});
         const {latitude, longitude} = position.coords;
-        localStorage.setItem("POS_KEY",JSON.stringify({lat: latitude,long:longitude}));
+        localStorage.setItem("POS_KEY",JSON.stringify({lat: latitude,lon:longitude}));
         this.loadNearbyPosts();
     }
     onFailedLoadGeolocation = () => {
         this.setState( {loadingGeoLocation: false, error: 'failed to load GeoLocation'});
     }
-    loadNearbyPosts = () => {
-        const {lat,lon} = JSON.parse(localStorage.getItem(POS_KEY));
-        this.setState({ loadingPosts: true, error: ''});
+    loadNearbyPosts = (location, range) => {
+        this.setState({ loadingPosts: true, error: '' });
+        const { lat, lon } = location ? location : JSON.parse(localStorage.getItem(POS_KEY));
+        const radius = range ? range : 200;
         $.ajax({
-            url: `${API_ROOT}/search?lat=${lat}&lon=${lon}&range=20000`,
+            url: `${API_ROOT}/search?lat=${lat}&lon=${lon}&range=${radius}`,
             method: 'GET',
             headers: {
-                Authorization: `${AUTH_PREFIX} ${localStorage.getItem(TOKEN_KEY)}`
+                Authorization: `${AUTH_PREFIX} ${localStorage.getItem(TOKEN_KEY)}`,
             },
         }).then((response) => {
-            this.setState({ posts: response, loadingPosts: false, error: '' });
             console.log(response);
-        }, (error) => {
-            this.setState({ loadingPosts: false, error: error.responseText });
-            console.log(error);
+            this.setState({ posts: response || [],loadingPosts: false, error: '' });
+        }, (response) => {
+            console.log(response.responseText);
+            this.setState({ loadingPosts: false, error: 'Failed to load posts!' });
         }).catch((error) => {
             console.log(error);
         });
-
     }
     getGalleryPanelContent = () => {
         if (this.state.error) {
@@ -100,7 +101,16 @@ export class Home extends React.Component{
                     {this.getGalleryPanelContent()}
 
                     </TabPane>
-                <TabPane tab="Map" key="2">Content of tab 2</TabPane>
+                <TabPane tab="Map" key="2">
+                    <WrappedAroundMap
+                        googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4R6AN7SmujjPUIGKdyao2Kqitzr1kiRg&v=3.exp&libraries=geometry,drawing,places"
+                        loadingElement={<div style={{ height: `100%` }} />}
+                        containerElement={<div style={{ height: `600px` }} />}
+                        mapElement={<div style={{ height: `100%` }} />}
+                        posts = {this.state.posts}
+                        loadNearbyPosts = {this.loadNearbyPosts}
+                    />
+                </TabPane>
             </Tabs>
         )
     }
